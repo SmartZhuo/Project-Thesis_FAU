@@ -22,6 +22,12 @@ class Image:
 
 
     def detect_markers(self):
+        """
+        The function `detect_markers` reads an image, converts it to grayscale, detects ArUco markers, and
+        returns the corners, IDs, rejected image points, and the original image.
+        :return: The `detect_markers` method returns four values: `corners`, `ids`, `rejectedImgPoints`, and
+        `image`.
+        """
         image = cv2.imread(self.image_path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         parameters =  aruco.DetectorParameters_create()
@@ -29,6 +35,16 @@ class Image:
         return corners, ids, rejectedImgPoints,image
     
     def calculate_marker_area(self,corners):
+        """
+        The function calculates the area of a marker based on the coordinates of its corners.
+        
+        :param corners: It looks like the code you provided is a function that calculates the area of a
+        marker based on its corner coordinates. However, you have not provided the actual values for the
+        `corners` parameter. If you provide me with the values for the `corners` parameter, I can help you
+        calculate
+        :return: The function `calculate_marker_area` is returning the area of a polygon formed by the
+        corners provided as input.
+        """
         x1 = int(corners[0][0][0][0])
         y1 = int(corners[0][0][0][1])
 
@@ -46,11 +62,39 @@ class Image:
         return marker_area
     
     def Get_quadrilaternal(self,corners):
+        """
+        The function `Get_quadrilateral` takes a list of corner points, converts them to a numpy array, and
+        returns the first point as an integer.
+        
+        :param corners: It looks like the `corners` parameter is a list of corner points of a quadrilateral.
+        The function `Get_quadrilateral` takes this list of corner points, converts it to a numpy array, and
+        then returns the first corner point as an integer
+        :return: The code is returning the first point of the quadrilateral, which is the point at index 0
+        of the quadrilateral_points array.
+        """
         corners1=np.array(corners[0]) 
         quadrilateral_points = corners1.astype(int)
         return quadrilateral_points[0]
     
 
+    """
+    The function `ExpandArea` takes a scaling factor `K` and a set of quadrilateral points, calculates
+    the expanded points based on the scaling factor, and returns the expanded points along with the
+    width and height of the quadrilateral.
+    
+    :param K: The parameter `K` in the `ExpandArea` function seems to be a scaling factor that
+    determines how much the quadrilateral should be expanded. It is used to scale the vectors from the
+    center of the quadrilateral to each of its points in order to expand the shape
+    :param quadrilateral_points: The `quadrilateral_points` parameter in the `ExpandArea` function
+    represents the coordinates of the four points that define a quadrilateral shape. These points are
+    used to calculate the center of the quadrilateral, expand the area by a factor of `K`, and determine
+    the width and height of the
+    :return: The function `ExpandArea` returns three values: 
+    1. `expanded_points`: The coordinates of the quadrilateral points after expanding by a factor of
+    `K`.
+    2. `w`: The width of the expanded quadrilateral.
+    3. `h`: The height of the expanded quadrilateral.
+    """
     def ExpandArea(self,K,quadrilateral_points):   
         center = np.mean(quadrilateral_points, axis=0)  
         vectors = quadrilateral_points - center  
@@ -63,6 +107,17 @@ class Image:
         return expanded_points,w,h
     
     def Get_ROI(self,expanded_points,image):
+        """
+        This function calculates the Region of Interest (ROI) in an image based on given expanded points.
+        
+        :param expanded_points: It looks like the description of the `expanded_points` parameter is
+        missing. Could you please provide more information about what `expanded_points` represents or how
+        it is structured? This will help me understand the context in which the function `Get_ROI` is
+        being used and provide you with a more accurate
+        :param image: The function `Get_ROI` takes in two parameters: `expanded_points` and `image`
+        :return: a region of interest (ROI) from the input image based on the minimum and maximum x and y
+        coordinates of the expanded points provided.
+        """
         x_coords = expanded_points[:, 0]  
         y_coords = expanded_points[:, 1]  
         x_min = int(x_coords.min()) 
@@ -79,6 +134,7 @@ class Image:
         roi_blurred = cv2.GaussianBlur(roi_gray, (5, 5), 0)
         roi_edges = cv2.Canny(roi_blurred, 50, 150)  
         roi_corners1=np.array(roi_corners[0]) 
+     # The above code snippet is performing the following tasks:
         roi_corners_array = roi_corners1.astype(int)
         contours, _ = cv2.findContours(roi_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  
         valid_contours = []
@@ -117,16 +173,29 @@ class Image:
         return ellipse_centers,roi_corners
     
     def getCornerinOrder(self,ellipse_centers):
+        """
+        This Python function takes a list of ellipse centers and returns the coordinates of the corners
+        (top-left, top-right, bottom-left, bottom-right) based on the average position of the centers.
+        
+        :param ellipse_centers: The `getCornerinOrder` function takes a list of ellipse centers as input
+        and determines the positions of the corners of a bounding box around these ellipses. The function
+        calculates the average x and y coordinates of all the ellipse centers and then assigns each ellipse
+        center to one of the four corners based
+        :return: The `getCornerinOrder` function returns a dictionary `positions` containing the
+        coordinates of the corners of a shape based on the input `ellipse_centers`. The keys of the
+        dictionary represent the corner positions ('top-left', 'top-right', 'bottom-left', 'bottom-right'),
+        and the values are the corresponding coordinates of those corners.
+        """
         positions = {  
         'top-left': None,  
         'top-right': None,  
         'bottom-left': None,  
         'bottom-right': None  
         }  
-        # 提取所有点的x坐标  
+
         x_coordinates = [center[0] for center in ellipse_centers]  
         y_coordinates = [center[1] for center in ellipse_centers]  
-        # 计算x坐标的平均值  
+ 
         average_x = sum(x_coordinates) / len(x_coordinates)  
         average_y = sum(y_coordinates) / len(y_coordinates)  
         #print(average_x,average_y)
@@ -159,6 +228,23 @@ class Image:
     
 
     
+        """
+        The function `line_fitting` fits lines between specified points using an objective function and
+        optimization to find the optimal parameter.
+        
+        :param roi_corners: The `roi_corners` parameter seems to represent the corners of a region of
+        interest (ROI). The function `line_fitting` takes this parameter along with
+        `ellipse_centers_inorder` to fit lines between specific pairs of corners and ellipse centers. The
+        objective is to find the optimal parameter `t`
+        :param ellipse_centers_inorder: Ellipse_centers_inorder is a dictionary containing the centers of
+        four ellipses in a specific order. The keys in the dictionary represent the positions of the
+        ellipses ('top-left', 'top-right', 'bottom-right', 'bottom-left'), and the values are tuples
+        representing the center coordinates of each
+        :return: The `line_fitting` function returns a dictionary `linefit_points` containing the fitted
+        points for each corner ('top-left', 'top-right', 'bottom-right', 'bottom-left') based on the
+        ellipse centers and the corners of the region of interest (ROI). Additionally, it returns the
+        `roi_corner_inorder` dictionary which contains the corners of the ROI in a specific order.
+        """
     def line_fitting(self, roi_corners, ellipse_centers_inorder):
         def objective_function(t):
             D = tuple((A_i + t * (B_i - A_i) for A_i, B_i in zip(A, B)))
@@ -191,6 +277,27 @@ class Image:
 
 ####################SUB-PIXEL######################
     def mask_inner_marker(self,roi,roi_corners,roi_corner_inorder,subpix_path):
+        """
+        This function takes an image region of interest (ROI) and fills it with a color obtained from the
+        center of the ROI.
+        
+        :param roi: The `roi` parameter in the `mask_inner_marker` function is typically an image or a
+        region of interest (ROI) that you want to process. It is used for extracting color information and
+        performing operations like filling polygons with a specific color
+        :param roi_corners: The `roi_corners` parameter in the `mask_inner_marker` function seems to be a
+        list containing the corners of a region of interest (ROI). The function converts the first element
+        of `roi_corners` to a numpy array and then extracts the corner points as integers to be used for
+        further processing
+        :param roi_corner_inorder: The `roi_corner_inorder` parameter seems to be a dictionary containing
+        the coordinates of the corners of a region of interest (ROI). The keys in this dictionary are likely
+        'top-left', 'top-right', 'bottom-left', and 'bottom-right', each corresponding to a corner of the
+        ROI
+        :param subpix_path: The `subpix_path` parameter in the `mask_inner_marker` function is the file path
+        where the processed image will be saved after filling the polygon with a specific color. This path
+        is used in the `cv2.imwrite` function to save the image before displaying it
+        :return: The function `mask_inner_marker` is returning the modified image `roi_subpix` after filling
+        a polygon with a specific color at the center of the region of interest (ROI).
+        """
         roi_subpix=roi
         roi_corners1=np.array(roi_corners[0]) 
         roi_corners_array = roi_corners1.astype(int)
@@ -213,10 +320,40 @@ class Image:
         return roi_subpix
 
     def euclidean_distance(self,point1, point2):
+        """
+        The function calculates the Euclidean distance between two points in a multi-dimensional space.
+        
+        :param point1: The `point1` parameter represents the coordinates of the first point in a
+        multi-dimensional space. It could be a list, tuple, or array containing the coordinates of the
+        first point
+        :param point2: The `euclidean_distance` function you provided calculates the Euclidean distance
+        between two points in n-dimensional space. The `point1` and `point2` parameters represent the
+        coordinates of the two points in the form of arrays or lists. The function subtracts the
+        coordinates of `point2` from
+        :return: The function `euclidean_distance` calculates the Euclidean distance between two points
+        `point1` and `point2` in n-dimensional space. The function returns the Euclidean distance as a
+        numerical value.
+        """
         return np.sqrt(np.sum((np.array(point1) - np.array(point2))**2))
 
 
     def find_subpixel_corners(self,roi_corners,subpix_corners):
+        """
+        The function `find_subpixel_corners` takes in two sets of corners and calculates the subpixel points
+        closest to each corner of a region of interest.
+        
+        :param roi_corners: The `roi_corners` parameter seems to represent the corners of a region of
+        interest (ROI), while the `subpix_corners` parameter likely represents the subpixel corners that are
+        being compared to the ROI corners
+        :param subpix_corners: The `subpix_corners` parameter in the `find_subpixel_corners` function
+        represents a list of subpixel corners that are being compared to the corners of a region of interest
+        (ROI) to find the closest subpixel corner to each ROI corner. These subpixel corners are likely
+        represented as (x
+        :return: The function `find_subpixel_corners` returns a dictionary `subpixel_points` containing the
+        subpixel coordinates of the corners of a region of interest (ROI). The keys in the dictionary
+        represent the corners ('top-right', 'bottom-right', 'bottom-left', 'top-left') and the values are
+        the corresponding subpixel coordinates.
+        """
         subpixel_points = {  
         'top-right': None,
         'bottom-right': None,
@@ -241,6 +378,20 @@ class Image:
         return subpixel_points
 
 
+    """
+    The function calculates the final optimal points by averaging corresponding points from two input
+    dictionaries.
+    
+    :param linefit_points: The `linefit_points` parameter seems to contain the coordinates of points
+    obtained from a line fitting process. It likely includes the following keys: 'top-left',
+    'top-right', 'bottom-left', and 'bottom-right', each pointing to a tuple representing a point
+    :param subpixel_points: It seems like you were about to provide more information about the
+    `subpixel_points` parameter but it got cut off. Could you please provide the details or let me know
+    how I can assist you further with the `final_points` function?
+    :return: The function `final_points` returns a dictionary `final_optimal_points` containing the
+    average of corresponding values from the `linefit_points` and `subpixel_points` dictionaries for the
+    keys 'top-left', 'top-right', 'bottom-left', and 'bottom-right'.
+    """
     def final_points(self, linefit_points,subpixel_points):
         final_optimal_points = {  
         'top-right': None,
